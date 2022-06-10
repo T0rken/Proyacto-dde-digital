@@ -1,1 +1,45 @@
-
+CBLOCK  0x70                                ; El contexto se guarda en esta posición ya que esta posición está reflejada
+    STATUS_TEMP
+    W_TEMP
+ENDC
+CBLOCK  0x20    
+    DIS0         
+    DIS1         	 	 
+    BARRIDO 
+    TIEMPO
+    TIEMPO1      
+    TIEMPO2      
+    TIEMPO3      
+    LIMITE       
+    KEYNUM
+    AUX_FILE
+    
+ENDC    
+         ORG      0x00
+	GOTO      MAIN
+	 ORG      0x04
+	GOTO      INTER
+	 ORG      0x05
+	 
+MAIN ; CONFIGURACION DE PUERTOS
+         BANKSEL  ANSEL
+	CLRF      ANSEL                      CUIDADO VER CUALES ENTRADAS SON ANALOGICAS
+	CLRF      ANSELH
+	 BANKSEL  TRISD
+	MOVLW     b'00001111'              ; utilizo el nibble inferior como entrada para el teclado  
+	MOVWF     TRISB
+	MOVLW     b'00000000'              ; utilizo el nibble inferior del puerto A como salida para el barrido del teclado
+	MOVWF     TRISA 
+	CLRF      TRISD                    ; defino el portD como salida
+	BCF       TRISC,0                  ; defino RC0 como salida. RB0 = control pin
+	BCF       TRISC,1                  ; defino RC1 como salida. RB1 = control pin
+	
+     ; CONFIGURACION DE PORTB - PULLUPS + IOCB + CARGA PARA DETECTAR PRESIÓN DE TECLADO
+	MOVLW     b'00001111'      
+	MOVWF     IOCB                     ; detecto cambio de estado en el nibble inferior del portb
+	 BANKSEL  PORTA
+	MOVLW     b'00000000'              ; seteo salida del teclado desde portA para poder detectar ceros en el nibble inferior del portb             
+	MOVWF     PORTA
+	BSF       INTCON,RBIE              ; habilito interrupcion por cambio de estado en portb
+	MOVF      PORTB,F
+	CLRF      PORTD	                   ; los displays comienzan apagados
